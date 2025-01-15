@@ -5,7 +5,8 @@ Project to showcase the thread allocations of the PAL Sdk for Android: https://d
 ## Issues
 
 1. When creating `NonceLoader`, the library allocates around 34 threads with `gads-` as prefix for their names. You can see this by clicking on `Create nonce`
-in this sample project app and observe the list of threads.
+in this sample project app and observe the list of threads. These threads are garbage collected after around 1 minute, and never created again on subsequent nonce generations
+
 2. When generating a new nonce with `Create nonce` button, the `NonceLoader` allocates again one new thread per nonce request.
 
 
