@@ -13,8 +13,8 @@ in this sample project app and observe the list of threads.
 
 Before creating `NonceLoader`:
 
-![before](before.png)
+![before](before.png | width=200)
 
 After generating the first nonce:
 
-![after](after.png)
+![after](after.png | width=200)
