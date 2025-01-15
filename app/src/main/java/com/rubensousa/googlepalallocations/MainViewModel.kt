@@ -16,19 +16,15 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.util.UUID
 
-class MainViewModel(application: Application) : AndroidViewModel(application) {
+class MainViewModel(
+    private val application: Application,
+) : AndroidViewModel(application) {
 
     private val threads = MutableStateFlow<List<String>>(emptyList())
     private val nonces = MutableStateFlow(0)
 
     // Lazy to avoid immediate creation and check allocations before this gets created
-    private val nonceLoader by lazy {
-        NonceLoader(
-            application, ConsentSettings.builder()
-                .allowStorage(false)
-                .build()
-        )
-    }
+    private var nonceLoader: NonceLoader? = null
     private val state = MainScreenState(
         allocatedThreads = threads.asStateFlow(),
         noncesGenerated = nonces.asStateFlow(),
@@ -36,7 +32,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             generateNonce()
         },
         onReleaseClick = {
-            nonceLoader.release()
+            nonceLoader?.release()
+            nonceLoader = null
         }
     )
 
@@ -48,10 +45,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun generateNonce() {
         nonces.update { count -> count + 1 }
-        nonceLoader.loadNonceManager(createRandomNonceRequest())
+        getOrCreateNonceLoader().loadNonceManager(createRandomNonceRequest())
             .addOnSuccessListener { manager ->
                 Log.i("NONCE", "Nonce generated: ${manager.nonce}")
             }
+    }
+
+    private fun getOrCreateNonceLoader(): NonceLoader {
+        nonceLoader?.let { return it }
+        val newLoader = NonceLoader(
+            application, ConsentSettings.builder()
+                .allowStorage(true)
+                .build()
+        )
+        nonceLoader = newLoader
+        return newLoader
     }
 
     private fun createRandomNonceRequest(): NonceRequest {
